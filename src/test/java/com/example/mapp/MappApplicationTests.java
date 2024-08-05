@@ -1,5 +1,6 @@
 package com.example.mapp;
 
+import com.example.mapp.model.Form;
 import com.example.mapp.model.Program;
 import com.example.mapp.model.Role;
 import com.example.mapp.repository.ProgramRepository;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -38,8 +40,9 @@ class MappApplicationTests {
 
     @Test
     @Transactional
-    void testProgramSecurityFunctions() {
+    void testRoleProgramSecurityFunctions() {
 
+        // create 2 programs
         List<Program> savedPrograms = programRepository.saveAll(
                 List.of(Program.builder()
                                 .name("OISAABC123")
@@ -60,7 +63,7 @@ class MappApplicationTests {
                 List.of("CREATE", "READ", "UPDATE", "CREATE", "READ", "UPDATE"));
 
         // assert 3 mappings total
-        assertTrue(p.getRoleFunctionMappings().size() == 3);
+        assertEquals(3, p.getRoleFunctionMappings().size());
 
         // add USER role with just READ
         var u = roleMappingService.associateRoleToProgram("OISAABC123",
@@ -68,15 +71,51 @@ class MappApplicationTests {
                 List.of("READ"));
 
         // assert 4 mappings total
-        assertTrue(p.getRoleFunctionMappings().size() == 4);
+        assertEquals(4, u.getRoleFunctionMappings().size());
 
-//        // take away ADMIN's CREATE ability, check no orphans
-//        p = roleMappingService.associateRoleToProgram("OISAABC123",
-//                "ADMIN",
-//                List.of("READ", "UPDATE"));
-//
-//        // assert 3 mappings total now
-//        assertTrue(p.getRoleFunctionMappings().size() == 3);
+        // take away ADMIN's CREATE ability, check no orphans (orphans removed from previous ADMIN setting)
+        p = roleMappingService.associateRoleToProgram("OISAABC123",
+                "ADMIN",
+                List.of("READ", "UPDATE"));
+
+        // assert 3 mappings total now
+        assertEquals(3, p.getRoleFunctionMappings().size());
+    }
+
+    @Test
+    @Transactional
+    void testRoleProgramFormSecuritySettings() {
+
+        // create two programs
+        List<Program> savedPrograms = programRepository.saveAll(
+                List.of(Program.builder()
+                                .name("OISAABC123")
+                                .build(),
+                        Program.builder()
+                                .name("OISAABC456")
+                                .build()));
+
+        roleMappingService.addSecurityFunctionsToProgram("OISAABC123", List.of("CREATE", "READ", "UPDATE"));
+        var p = roleMappingService.getProgramById(savedPrograms.get(0).getId());
+
+        // verify we added three security functions to the program OISAABC123
+        assertTrue(p.getSecurityFunctions().size() == 3);
+
+        p = roleMappingService.addFormToProgram("OISAABC123", "Form1");
+        p = roleMappingService.addFormToProgram("OISAABC123", "Form2");
+
+        // verify we added 2 forms
+        assertTrue(p.getForms().size() == 2);
+
+        // associate roles to security functions to the forms - just grant "DELETE" to ADMIN on Form1
+        p = roleMappingService.associateRoleToForm("OISAABC123", "Form1", "ADMIN", List.of("DELETE"));
+
+        assertTrue(p.getForms().size() == 2);
+
+        // assert we have one role for ADMIN on Form1
+        Form f = p.getFormNamed("Form1").orElseThrow();
+        assertEquals(1, f.getRoleFunctionFormMappings().size());
+        assertTrue(f.getRoleFunctionFormMappings().stream().toList().get(0).getRole().getName().equals("ADMIN"));
     }
 
 }

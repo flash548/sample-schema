@@ -4,17 +4,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-/**
- * Entity/Table that maps Roles to Programs to SecurityFunctions
- */
 @Entity
-@Table(name = "role_function_mappings")
+@Table(name = "role_function_form_mappings")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class RoleFunctionMapping {
+public class RoleFunctionFormMapping {
 
     @Embeddable
     @Data
@@ -22,7 +19,7 @@ public class RoleFunctionMapping {
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class RoleFunctionMappingId {
+    public static class RoleFunctionFormMappingId {
 
         @Column(name = "program_id")
         Long programId;
@@ -33,10 +30,13 @@ public class RoleFunctionMapping {
         @Column(name = "security_function_id")
         Long securityFunctionId;
 
+        @Column(name = "form_id")
+        Long formId;
+
     }
 
     @Id
-    RoleFunctionMappingId id = new RoleFunctionMappingId();
+    RoleFunctionFormMappingId id = new RoleFunctionFormMappingId();
 
     @NotNull
     @ManyToOne
@@ -50,10 +50,14 @@ public class RoleFunctionMapping {
     @EqualsAndHashCode.Exclude
     Role role;
 
+    @ManyToOne
+    @JoinColumn(name = "form_id", insertable = false, updatable = false)
+    @EqualsAndHashCode.Exclude
+    Form form;
+
     @NotNull
     @ManyToOne
     @JoinColumn(name = "security_function_id", insertable = false, updatable = false)
     @EqualsAndHashCode.Exclude
     SecurityFunction securityFunction;
-
 }

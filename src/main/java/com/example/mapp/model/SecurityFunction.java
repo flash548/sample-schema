@@ -1,5 +1,6 @@
 package com.example.mapp.model;
 
+import com.example.mapp.model.util.UppercasedEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -14,7 +15,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class SecurityFunction {
+public class SecurityFunction implements UppercasedEntity {
 
     @Id
     @GeneratedValue
@@ -34,7 +35,8 @@ public class SecurityFunction {
 
     @PreUpdate
     @PrePersist
-    void conditionName() {
+    @Override
+    public void uppercaseName() {
         this.name = this.name.toUpperCase();
     }
 

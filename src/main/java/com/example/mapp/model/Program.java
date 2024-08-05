@@ -1,10 +1,12 @@
 package com.example.mapp.model;
 
+import com.example.mapp.model.util.UppercasedEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -18,14 +20,13 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Program {
+public class Program implements UppercasedEntity {
 
     @Id
     @GeneratedValue
     Long id;
 
-    @NotNull
-    String name;
+    @NotNull String name;
 
     /**
      * Forms underneath this program
@@ -47,10 +48,16 @@ public class Program {
      * This program's defined security functions
      */
     @Builder.Default
-    @OneToMany(mappedBy = "program", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "program", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     Set<SecurityFunction> securityFunctions = new HashSet<>();
 
+    @PreUpdate
+    @PrePersist
+    @Override
+    public void uppercaseName() {
+        this.name = name.toUpperCase();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -58,12 +65,15 @@ public class Program {
         if (o == null || getClass() != o.getClass()) return false;
 
         Program program = (Program) o;
-
         return name.equals(program.name);
     }
 
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    public Optional<Form> getFormNamed(String formName) {
+        return this.getForms().stream().filter(f -> f.getName().equals(formName.toUpperCase())).findFirst();
     }
 }

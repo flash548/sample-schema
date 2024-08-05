@@ -16,4 +16,5 @@ public interface RoleMappingService {
     Program addSecurityFunctionsToProgram(String programName, List<String> functionNames);
 
     Program addFormToProgram(String programName, String formName);
+    Program associateRoleToForm(String programName, String formName, String roleName, List<String> functionNames);
 }

@@ -1,8 +1,12 @@
 package com.example.mapp.model;
 
+import com.example.mapp.model.util.UppercasedEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -15,17 +19,24 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Form {
+public class Form implements UppercasedEntity {
 
     @Id
     @GeneratedValue
     Long id;
 
-    @NotNull
-    String name;
+    @NotNull String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     Program owner;
+
+    /**
+     * Roles and their associated SecurityFunction with this form
+     */
+    @Builder.Default
+    @OneToMany(mappedBy = "form", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    Set<RoleFunctionFormMapping> roleFunctionFormMappings = new HashSet<>();
 
     @Override
     public boolean equals(Object o) {
@@ -36,6 +47,14 @@ public class Form {
 
         return name.equals(form.name);
     }
+
+    @PreUpdate
+    @PrePersist
+    @Override
+    public void uppercaseName() {
+        this.name = name.toUpperCase();
+    }
+
 
     @Override
     public int hashCode() {
