@@ -32,7 +32,7 @@ public class Program implements UppercasedEntity {
      * Forms underneath this program
      */
     @Builder.Default
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     Set<Form> forms = new HashSet<>();
 
@@ -40,7 +40,7 @@ public class Program implements UppercasedEntity {
      * Roles and their associated SecurityFunction with this program
      */
     @Builder.Default
-    @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     Set<RoleFunctionMapping> roleFunctionMappings = new HashSet<>();
 
@@ -65,7 +65,7 @@ public class Program implements UppercasedEntity {
         if (o == null || getClass() != o.getClass()) return false;
 
         Program program = (Program) o;
-        return name.equals(program.name);
+        return name.toUpperCase().equals(program.name.toUpperCase());
     }
 
     @Override

@@ -47,7 +47,7 @@ public class SecurityFunction implements UppercasedEntity {
 
         SecurityFunction that = (SecurityFunction) o;
 
-        if (!name.equals(that.name)) return false;
+        if (!name.toUpperCase().equals(that.name.toUpperCase())) return false;
         return programId.equals(that.programId);
     }
 

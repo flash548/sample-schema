@@ -45,7 +45,7 @@ public class Form implements UppercasedEntity {
 
         Form form = (Form) o;
 
-        return name.equals(form.name);
+        return name.toUpperCase().equals(form.name.toUpperCase());
     }
 
     @PreUpdate

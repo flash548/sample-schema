@@ -1,11 +1,9 @@
-package com.example.mapp;
+package com.example.mapp.service;
 
 import com.example.mapp.model.Form;
-import com.example.mapp.model.Program;
 import com.example.mapp.model.Role;
 import com.example.mapp.repository.ProgramRepository;
 import com.example.mapp.repository.RoleRepository;
-import com.example.mapp.service.RoleMappingService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,16 +41,11 @@ class MappApplicationTests {
     void testRoleProgramSecurityFunctions() {
 
         // create 2 programs
-        List<Program> savedPrograms = programRepository.saveAll(
-                List.of(Program.builder()
-                                .name("OISAABC123")
-                                .build(),
-                        Program.builder()
-                                .name("OISAABC456")
-                                .build()));
+        var p1 = roleMappingService.createProgram("OISAABC123");
+        roleMappingService.createProgram("OISAABC456");
 
         roleMappingService.addSecurityFunctionsToProgram("OISAABC123", List.of("CREATE", "create", "READ", "UPDATE"));
-        var p = roleMappingService.getProgramById(savedPrograms.get(0).getId());
+        var p = roleMappingService.getProgramById(p1.getId());
 
         // verify we added three security functions despite giving it 4 (de-duped, case-insensitive)
         assertTrue(p.getSecurityFunctions().size() == 3);
@@ -87,16 +80,11 @@ class MappApplicationTests {
     void testRoleProgramFormSecuritySettings() {
 
         // create two programs
-        List<Program> savedPrograms = programRepository.saveAll(
-                List.of(Program.builder()
-                                .name("OISAABC123")
-                                .build(),
-                        Program.builder()
-                                .name("OISAABC456")
-                                .build()));
+        var p1 = roleMappingService.createProgram("OISAABC123");
+        roleMappingService.createProgram("OISAABC456");
 
         roleMappingService.addSecurityFunctionsToProgram("OISAABC123", List.of("CREATE", "READ", "UPDATE"));
-        var p = roleMappingService.getProgramById(savedPrograms.get(0).getId());
+        var p = roleMappingService.getProgramById(p1.getId());
 
         // verify we added three security functions to the program OISAABC123
         assertTrue(p.getSecurityFunctions().size() == 3);

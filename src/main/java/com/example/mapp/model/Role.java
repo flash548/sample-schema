@@ -37,7 +37,7 @@ public class Role implements UppercasedEntity {
 
         Role role = (Role) o;
 
-        return name.equals(role.name);
+        return name.toUpperCase().equals(role.name.toUpperCase());
     }
 
     @Override
