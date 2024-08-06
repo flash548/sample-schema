@@ -1,4 +1,13 @@
-# Overview
+# A basic Roles-to-Resources Mapper Overview
+
+<!-- TOC -->
+* [Overview](#overview)
+  * [Sample Schema](#sample-schema)
+  * [Sample ERD](#sample-erd)
+  * [Sample API Return](#sample-api-return)
+  * [API](#api)
+  * [Database / Sources](#database--sources)
+<!-- TOC -->
 
 **NOTE**
 There's a lot of stuff in here that is done for demonstration purposes that would need
@@ -7,12 +16,14 @@ DDL, API endpoint security, DTOs, test coverage, etc)...
 
 ---
 
-This service is intended to be fed a "role" from an IdP (e.g. Keycloak) and then fetch what that "role"
+This service shows how to map many-roles to many-nested-resources.
+
+This service is intended to be fed a "role" name from an IdP (e.g. Keycloak) and then fetch what that "role"
 can do within the given schema (amongst the schema's forms and program levels).
 
 Permissions are synonymous with "Security Functions"... they can be created per program unit.
 
-# Sample Schema
+## Sample Schema
 
 Some overall rules enforced:
 
@@ -29,11 +40,71 @@ Some overall rules enforced:
   that will need to be created as such)
     * This allows for auditing of security function lifespans, etc
 
-# Sample ERD
+## Sample ERD
 
 ![testmapp - public.png](testmapp%20-%20public.png)
 
-# API
+## Sample API Return
+
+A sample output from the `/roleDetails` endpoint for all persisted roles... shows what they can do within each persisted program/form.
+
+```agsl
+  {
+    "roleName": "ROLE1",
+    "programs": [
+      {
+        "id": 1,
+        "name": "PRG123",
+        "forms": [
+          {
+            "id": 352,
+            "name": "FORM1",
+            "roleMappings": {
+              "ROLE1": [
+                "UPDATE"
+              ]
+            }
+          }
+        ],
+        "roleMappings": {
+          "ROLE1": [
+            "READ",
+            "UPDATE"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "roleName": "ADMIN",
+    "programs": [
+      {
+        "id": 1,
+        "name": "PRG123",
+        "forms": [
+          {
+            "id": 352,
+            "name": "FORM1",
+            "roleMappings": {
+              "ROLE1": [
+                "UPDATE"
+              ]
+            }
+          }
+        ],
+        "roleMappings": {
+          "ROLE1": [
+            "READ",
+            "UPDATE"
+          ]
+        }
+      }
+    ]
+  }
+]
+```
+
+## API
 
 The REST controller offers easy management of said schema.
 
