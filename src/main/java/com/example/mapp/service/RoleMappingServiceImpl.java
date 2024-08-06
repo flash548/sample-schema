@@ -45,7 +45,7 @@ public class RoleMappingServiceImpl implements RoleMappingService {
         if (!programRepository.existsByNameIgnoreCase(programName)) {
             return programRepository.save(Program.builder().name(programName).build());
         } else {
-            throw new ConflictException("Program name already exists in OIS");
+            throw new ConflictException("Program name already exists");
         }
     }
 
@@ -55,18 +55,18 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
-    public Role createOISRole(String name) {
+    public Role createRoleName(String name) {
         return roleRepository.save(Role.builder().name(name.toUpperCase()).build());
     }
 
     @Override
-    public Role updateOISRoleName(Long existingRoleId, String name) {
+    public Role updateRoleName(Long existingRoleId, String name) {
         Role r = roleRepository.findById(existingRoleId).orElseThrow(() -> new NotFoundException("Role id not found"));
         if (!roleRepository.existsByNameIgnoreCase(name)) {
             r.setName(name);
             return roleRepository.save(r);
         } else {
-            throw new ConflictException("That role already exists in OIS");
+            throw new ConflictException("That role already exists");
         }
     }
 

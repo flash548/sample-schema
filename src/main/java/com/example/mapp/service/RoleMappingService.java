@@ -13,8 +13,8 @@ import java.util.List;
 
 public interface RoleMappingService {
 
-    Role createOISRole(String name);
-    Role updateOISRoleName(Long existingRoleId, String name);
+    Role createRoleName(String name);
+    Role updateRoleName(Long existingRoleId, String name);
     List<Role> getRoles();
 
     Program createProgram(String programName);

@@ -67,7 +67,7 @@ public class RoleMappingController {
 
     @PostMapping("/roles/add-role")
     public ResponseEntity<Role> postRole(@RequestParam String roleName) {
-        return new ResponseEntity<>(roleMappingService.createOISRole(roleName), HttpStatus.OK);
+        return new ResponseEntity<>(roleMappingService.createRoleName(roleName), HttpStatus.OK);
     }
 
     @PostMapping(value = "/map-role-to-form")

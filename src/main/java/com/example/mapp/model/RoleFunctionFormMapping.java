@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+/**
+ * Entity/Table that maps Roles to a Program's owned Forms to SecurityFunctions
+ * Since forms can override a parent's role to program mapping (then this join table is needed)
+ */
 @Entity
 @Table(name = "role_function_form_mappings")
 @Data

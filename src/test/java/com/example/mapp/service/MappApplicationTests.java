@@ -41,17 +41,17 @@ class MappApplicationTests {
     void testRoleProgramSecurityFunctions() {
 
         // create 2 programs
-        var p1 = roleMappingService.createProgram("OISAABC123");
-        roleMappingService.createProgram("OISAABC456");
+        var p1 = roleMappingService.createProgram("AABC123");
+        roleMappingService.createProgram("AABC456");
 
-        roleMappingService.addSecurityFunctionsToProgram("OISAABC123", List.of("CREATE", "create", "READ", "UPDATE"));
+        roleMappingService.addSecurityFunctionsToProgram("AABC123", List.of("CREATE", "create", "READ", "UPDATE"));
         var p = roleMappingService.getProgramById(p1.getId());
 
         // verify we added three security functions despite giving it 4 (de-duped, case-insensitive)
         assertTrue(p.getSecurityFunctions().size() == 3);
 
         // add ADMIN role to this program with CREATE, READ, UPDATE (intentionally duplicates to check they're unique'd)
-        p = roleMappingService.associateRoleToProgram("OISAABC123",
+        p = roleMappingService.associateRoleToProgram("AABC123",
                 "ADMIN",
                 List.of("CREATE", "READ", "UPDATE", "CREATE", "READ", "UPDATE"));
 
@@ -59,7 +59,7 @@ class MappApplicationTests {
         assertEquals(3, p.getRoleFunctionMappings().size());
 
         // add USER role with just READ
-        var u = roleMappingService.associateRoleToProgram("OISAABC123",
+        var u = roleMappingService.associateRoleToProgram("AABC123",
                 "USER",
                 List.of("READ"));
 
@@ -67,7 +67,7 @@ class MappApplicationTests {
         assertEquals(4, u.getRoleFunctionMappings().size());
 
         // take away ADMIN's CREATE ability, check no orphans (orphans removed from previous ADMIN setting)
-        p = roleMappingService.associateRoleToProgram("OISAABC123",
+        p = roleMappingService.associateRoleToProgram("AABC123",
                 "ADMIN",
                 List.of("READ", "UPDATE"));
 
@@ -80,23 +80,23 @@ class MappApplicationTests {
     void testRoleProgramFormSecuritySettings() {
 
         // create two programs
-        var p1 = roleMappingService.createProgram("OISAABC123");
-        roleMappingService.createProgram("OISAABC456");
+        var p1 = roleMappingService.createProgram("AABC123");
+        roleMappingService.createProgram("AABC456");
 
-        roleMappingService.addSecurityFunctionsToProgram("OISAABC123", List.of("CREATE", "READ", "UPDATE"));
+        roleMappingService.addSecurityFunctionsToProgram("AABC123", List.of("CREATE", "READ", "UPDATE"));
         var p = roleMappingService.getProgramById(p1.getId());
 
-        // verify we added three security functions to the program OISAABC123
+        // verify we added three security functions to the program AABC123
         assertTrue(p.getSecurityFunctions().size() == 3);
 
-        p = roleMappingService.addFormToProgram("OISAABC123", "Form1");
-        p = roleMappingService.addFormToProgram("OISAABC123", "Form2");
+        p = roleMappingService.addFormToProgram("AABC123", "Form1");
+        p = roleMappingService.addFormToProgram("AABC123", "Form2");
 
         // verify we added 2 forms
         assertTrue(p.getForms().size() == 2);
 
         // associate roles to security functions to the forms - just grant "DELETE" to ADMIN on Form1
-        p = roleMappingService.associateRoleToForm("OISAABC123", "Form1", "ADMIN", List.of("DELETE"));
+        p = roleMappingService.associateRoleToForm("AABC123", "Form1", "ADMIN", List.of("DELETE"));
 
         assertTrue(p.getForms().size() == 2);
 

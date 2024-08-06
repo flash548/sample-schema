@@ -13,9 +13,9 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     Optional<Program> findByName(String name);
 
     /**
-     * A very costly query that should probably be refactored
+     * A very costly query **that should probably be refactored** given its eagerness...
      * @param roleName rolename (and its permissions) to filter out of all the programs
-     * @return programs that with securityfunctions mapped only to given rolename
+     * @return programs that with security functions mapped only to given rolename
      */
     @Query("""
                 select p from Program p 
