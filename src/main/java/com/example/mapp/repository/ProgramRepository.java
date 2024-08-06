@@ -14,14 +14,15 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     /**
      * A very costly query **that should probably be refactored** given its eagerness...
+     *
      * @param roleName rolename (and its permissions) to filter out of all the programs
      * @return programs that with security functions mapped only to given rolename
      */
     @Query("""
                 select p from Program p 
-                    JOIN FETCH p.roleFunctionMappings rfm 
-                    JOIN FETCH p.forms f 
-                    JOIN FETCH f.roleFunctionFormMappings rffm 
+                    JOIN FETCH p.roleFunctionMappings rfm
+                    JOIN FETCH p.forms f
+                    JOIN FETCH f.roleFunctionFormMappings rffm
                     JOIN FETCH rfm.role r 
                     JOIN FETCH rffm.role r2
                     WHERE r.name = :roleName and r2.name = :roleName

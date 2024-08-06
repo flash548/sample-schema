@@ -7,10 +7,8 @@ import com.example.mapp.dto.SecurityFunctionDto;
 import com.example.mapp.exception.ConflictException;
 import com.example.mapp.exception.NotFoundException;
 import com.example.mapp.model.*;
-import com.example.mapp.repository.FormRepository;
-import com.example.mapp.repository.ProgramRepository;
-import com.example.mapp.repository.RoleRepository;
-import com.example.mapp.repository.SecurityFunctionRepository;
+import com.example.mapp.repository.*;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +31,16 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     FormRepository formRepository;
 
     @Autowired
+    RoleFunctionMappingRepository roleFunctionMappingRepository;
+
+    @Autowired
+    RoleFunctionFormMappingRepository roleFunctionFormMappingRepository;
+
+    @Autowired
     SecurityFunctionRepository securityFunctionRepository;
+
+    @Autowired
+    EntityManager entityManager;
 
     private Program getProgramByName(String programName) {
         return programRepository.findByName(programName).orElseThrow(() -> new NotFoundException("Pgm Name not found"));
@@ -170,24 +177,26 @@ public class RoleMappingServiceImpl implements RoleMappingService {
         return programRepository.save(p);
     }
 
+    @Transactional
     @Override
     public RoleWithProgramsDto mapRoleAndProgramsToDto(String roleName) {
+
+        // TODO: fix this -- the context needs cleared due to the backing JPQL query (needs debugging)
+        // otherwise we get mixed results :(
+        entityManager.flush();
+        entityManager.clear();
+
         List<Program> programs = programRepository.getAllProgramsContainingRoleName(roleName.toUpperCase());
         return RoleWithProgramsDto.builder()
                 .roleName(roleName.toUpperCase())
                 .programs(programs.stream().map(p -> this.mapProgramToDto(p)).toList())
                 .build();
+
     }
 
     @Override
     public ProgramDto mapProgramToDto(Program program) {
-        Map<String, List<String>> groupedRoles = new HashMap<>();
-        program.getRoleFunctionMappings().stream().forEach(item -> {
-            if (!groupedRoles.containsKey(item.getRole().getName())) {
-                groupedRoles.put(item.getRole().getName(), new ArrayList<>());
-            }
-            groupedRoles.get(item.getRole().getName()).add(item.getSecurityFunction().getName());
-        });
+        Map<String, List<String>> groupedRoles = reduceProgramRoleMappingsToMap(program);
         return ProgramDto.builder()
                 .id(program.getId())
                 .name(program.getName())
@@ -196,8 +205,24 @@ public class RoleMappingServiceImpl implements RoleMappingService {
                 .build();
     }
 
+    private static Map<String, List<String>> reduceProgramRoleMappingsToMap(Program program) {
+        Map<String, List<String>> groupedRoles = new HashMap<>();
+        program.getRoleFunctionMappings().stream().forEach(item -> {
+            if (!groupedRoles.containsKey(item.getRole().getName())) {
+                groupedRoles.put(item.getRole().getName(), new ArrayList<>());
+            }
+            groupedRoles.get(item.getRole().getName()).add(item.getSecurityFunction().getName());
+        });
+        return groupedRoles;
+    }
+
     @Override
     public FormDto mapFormToDto(Form form) {
+        Map<String, List<String>> groupedRoles = reduceFormRoleMappingsToMap(form);
+        return FormDto.builder().id(form.getId()).name(form.getName()).roleMappings(groupedRoles).build();
+    }
+
+    private static Map<String, List<String>> reduceFormRoleMappingsToMap(Form form) {
         Map<String, List<String>> groupedRoles = new HashMap<>();
         form.getRoleFunctionFormMappings().stream().forEach(item -> {
             if (!groupedRoles.containsKey(item.getRole().getName())) {
@@ -205,7 +230,7 @@ public class RoleMappingServiceImpl implements RoleMappingService {
             }
             groupedRoles.get(item.getRole().getName()).add(item.getSecurityFunction().getName());
         });
-        return FormDto.builder().id(form.getId()).name(form.getName()).roleMappings(groupedRoles).build();
+        return groupedRoles;
     }
 
     @Override

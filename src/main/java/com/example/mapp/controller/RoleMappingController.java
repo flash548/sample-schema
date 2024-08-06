@@ -33,7 +33,6 @@ public class RoleMappingController {
             retVal.add(roleMappingService.mapRoleAndProgramsToDto(roleName));
         }
 
-
         return new ResponseEntity<>(retVal, HttpStatus.OK);
     }
 
