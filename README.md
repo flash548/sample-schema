@@ -79,22 +79,19 @@ A sample output from the `/roleDetails` endpoint for all persisted roles... show
     "roleName": "ADMIN",
     "programs": [
       {
-        "id": 1,
         "name": "PRG123",
         "forms": [
           {
-            "id": 352,
             "name": "FORM1",
             "roleMappings": {
-              "ROLE1": [
+              "ADMIN": [
                 "UPDATE"
               ]
             }
           }
         ],
         "roleMappings": {
-          "ROLE1": [
-            "READ",
+          "ADMIN": [
             "UPDATE"
           ]
         }
