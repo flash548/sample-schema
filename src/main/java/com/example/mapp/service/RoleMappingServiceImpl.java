@@ -7,8 +7,10 @@ import com.example.mapp.dto.SecurityFunctionDto;
 import com.example.mapp.exception.ConflictException;
 import com.example.mapp.exception.NotFoundException;
 import com.example.mapp.model.*;
-import com.example.mapp.repository.*;
-import jakarta.persistence.EntityManager;
+import com.example.mapp.repository.ProgramRepository;
+import com.example.mapp.repository.RoleFunctionFormMappingRepository;
+import com.example.mapp.repository.RoleFunctionMappingRepository;
+import com.example.mapp.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,19 +27,11 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     RoleRepository roleRepository;
 
     @Autowired
-    FormRepository formRepository;
-
-    @Autowired
     RoleFunctionMappingRepository roleFunctionMappingRepository;
 
     @Autowired
     RoleFunctionFormMappingRepository roleFunctionFormMappingRepository;
 
-    @Autowired
-    SecurityFunctionRepository securityFunctionRepository;
-
-    @Autowired
-    EntityManager entityManager;
 
     private Program getProgramByName(String programName) {
         return programRepository.findByName(programName).orElseThrow(() -> new NotFoundException("Pgm Name not found"));
@@ -127,7 +121,6 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
-    @Transactional
     public Program addFormToProgram(String programName, String formName) {
         Program p = this.getProgramByName(programName);
         p.getForms().add(Form.builder().name(formName).owner(p).build());
@@ -259,5 +252,34 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     @Override
     public SecurityFunctionDto mapSecurityFunctionToDto(SecurityFunction securityFunction) {
         return SecurityFunctionDto.builder().name(securityFunction.getName()).build();
+    }
+
+    @Override
+    public List<String> collateRolesToProgramAndForm(List<String> roleNames,
+                                                     String programName,
+                                                     String formName) {
+
+        Set<SecurityFunction> funcs = new HashSet<>();
+        Program p = this.getProgramByName(programName);
+        for (String roleName : roleNames) {
+            Role r = roleRepository.findByNameIgnoreCase(roleName)
+                    .orElseThrow(() -> new NotFoundException("Role not found"));
+            var programRoleFuncList = roleFunctionMappingRepository.findAllByProgramAndRole(p, r);
+
+
+            Form f = p.getFormNamed(formName).orElseThrow(() -> new NotFoundException("Form not found"));
+            var formList = roleFunctionFormMappingRepository.findAllByFormAndRoleAndProgram(f, r, p);
+
+            // if the form level list of security functions is present for given role
+            // then prefer that OVER the program level one
+            if (formList.isEmpty()) {
+                funcs.addAll(programRoleFuncList.stream().map(m -> m.getSecurityFunction()).toList());
+            } else {
+                funcs.addAll(formList.stream().map(m -> m.getSecurityFunction()).toList());
+            }
+
+        }
+
+        return funcs.stream().map(m -> m.getName()).toList();
     }
 }

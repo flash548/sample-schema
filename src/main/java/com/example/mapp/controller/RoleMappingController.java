@@ -47,7 +47,16 @@ public class RoleMappingController {
 
     @GetMapping("/programs/{id}")
     public ResponseEntity<ProgramDto> getProgram(@PathVariable Long id) {
-        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.getProgramById(id)), HttpStatus.OK);
+        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.getProgramById(id)),
+                HttpStatus.OK);
+    }
+
+    @PostMapping("/permissions-for-program")
+    public ResponseEntity<List<String>> getSecurityFunctionsForResource(@RequestParam String programName,
+                                                                                     @RequestParam(required = false) String formName,
+                                                                                     @RequestBody List<String> roleNames) {
+
+        return new ResponseEntity<>(roleMappingService.collateRolesToProgramAndForm(roleNames, programName, formName), HttpStatus.OK);
     }
 
     @PostMapping("/add-program")
@@ -67,6 +76,14 @@ public class RoleMappingController {
     @PostMapping("/roles/add-role")
     public ResponseEntity<Role> postRole(@RequestParam String roleName) {
         return new ResponseEntity<>(roleMappingService.createRoleName(roleName), HttpStatus.OK);
+    }
+
+    @PostMapping("/add-security-functions")
+    public ResponseEntity<ProgramDto> postSecurityFunctions(@RequestParam String programName,
+                                                            @RequestBody List<String> functionNames) {
+        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.addSecurityFunctionsToProgram(
+                programName,
+                functionNames)), HttpStatus.OK);
     }
 
     @PostMapping(value = "/map-role-to-form")
