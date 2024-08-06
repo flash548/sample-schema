@@ -13,10 +13,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class RoleMappingServiceImpl implements RoleMappingService {
@@ -101,7 +98,7 @@ public class RoleMappingServiceImpl implements RoleMappingService {
         // get the program's security functions we're concerned with
         List<SecurityFunction> funcs = p.getSecurityFunctions()
                 .stream()
-                .filter(f -> functionNames.stream().map(n -> n.toUpperCase()).toList().contains(f.getName()))
+                .filter(f -> functionNames.stream().map(String::toUpperCase).toList().contains(f.getName()))
                 .toList();
 
         // map the role to the program with said security functions
@@ -156,7 +153,7 @@ public class RoleMappingServiceImpl implements RoleMappingService {
         // get the program's security functions we're concerned with
         List<SecurityFunction> funcs = p.getSecurityFunctions()
                 .stream()
-                .filter(func -> functionNames.stream().map(n -> n.toUpperCase()).toList().contains(func.getName()))
+                .filter(func -> functionNames.stream().map(String::toUpperCase).toList().contains(func.getName()))
                 .toList();
 
         // map the role to the form with said security functions
@@ -177,19 +174,45 @@ public class RoleMappingServiceImpl implements RoleMappingService {
         return programRepository.save(p);
     }
 
-    @Transactional
     @Override
     public RoleWithProgramsDto mapRoleAndProgramsToDto(String roleName) {
+        List<Program> allPrograms = programRepository.findAll();
+        List<Program> returnList = new ArrayList<>();
+        Role r = roleRepository.findByNameIgnoreCase(roleName).orElseThrow();
 
-        // TODO: fix this -- the context needs cleared due to the backing JPQL query (needs debugging)
-        // otherwise we get mixed results :(
-        entityManager.flush();
-        entityManager.clear();
+        // go through all programs and filter out other roles besides roleName
+        for (Program p : allPrograms) {
+            Set<Form> forms = p.getForms();
+            Set<Form> filteredForms = new HashSet<>();
+            Set<RoleFunctionMapping> roleList = new HashSet<>(
+                    roleFunctionMappingRepository.findAllByProgramAndRole(p, r));
 
-        List<Program> programs = programRepository.getAllProgramsContainingRoleName(roleName.toUpperCase());
+            for (Form f : forms) {
+                var result = roleFunctionFormMappingRepository.findAllByFormAndRoleAndProgram(f, r, p);
+                if (!result.isEmpty()) {
+                    filteredForms.add(Form.builder()
+                            .name(f.getName())
+                            .id(f.getId())
+                            .owner(p)
+                            .roleFunctionFormMappings(new HashSet<>(result))
+                            .build());
+                }
+            }
+
+            // if this program has some association to given role, include it in the return
+            if (!filteredForms.isEmpty() || !roleList.isEmpty())
+                returnList.add(Program.builder()
+                        .id(p.getId())
+                        .name(p.getName())
+                        .forms(filteredForms)
+                        .roleFunctionMappings(roleList)
+                        .build());
+        }
+
+
         return RoleWithProgramsDto.builder()
                 .roleName(roleName.toUpperCase())
-                .programs(programs.stream().map(p -> this.mapProgramToDto(p)).toList())
+                .programs(returnList.stream().map(this::mapProgramToDto).toList())
                 .build();
 
     }
