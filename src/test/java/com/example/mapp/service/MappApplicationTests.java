@@ -65,7 +65,18 @@ class MappApplicationTests {
 
         p1 = roleMappingService.removeSecurityFunctionFromProgram(p1.getName(), "CREATE");
         assertEquals(2, p1.getForms().size());
-        assertEquals(1, p1.getForms().stream().filter(p -> p.getName().equals("FORM2")).toList().get(0).getRoleFunctionFormMappings().size());
+
+        // test form2 only has UPDATE on it now
+        assertEquals(1,
+                p1.getForms()
+                        .stream()
+                        .filter(p -> p.getName().equals("FORM2"))
+                        .findFirst()
+                        .get()
+                        .getRoleFunctionFormMappings()
+                        .size());
+
+        // entire program just has one SecFunc on it now ("UPDATE")
         assertEquals(1, p1.getSecurityFunctions().size());
     }
 

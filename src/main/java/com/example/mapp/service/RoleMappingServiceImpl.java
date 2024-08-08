@@ -123,7 +123,19 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     @Override
     public Program removeSecurityFunctionFromProgram(String programName, String functionName) {
         Program p = getProgramByName(programName);
-        p.getSecurityFunctions().removeIf(f -> f.getName().equals(functionName.toUpperCase()));
+        SecurityFunction sf = p.getSecurityFunctions()
+                .stream()
+                .filter(f -> f.getName().equals(functionName.toUpperCase()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Security Function not found"));
+
+        // remove all presence of this SecFunc
+        p.getRoleFunctionMappings().removeIf(f -> f.getSecurityFunction().equals(sf));
+        p.getForms()
+                .forEach(frm -> frm.getRoleFunctionFormMappings()
+                        .removeIf(rffm -> rffm.getSecurityFunction().equals(sf)));
+        p.getSecurityFunctions().removeIf(f -> f.equals(sf));
+
         return programRepository.save(p);
     }
 
