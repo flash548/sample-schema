@@ -31,9 +31,42 @@ class MappApplicationTests {
 
     @BeforeEach
     void setup() {
-        roleRepository.save(Role.builder()
-                .name("ADMIN")
-                .build());
+        roleRepository.save(Role.builder().name("ADMIN").build());
+    }
+
+    @Test
+    @Transactional
+    void testFormRemoval() {
+        var p1 = roleMappingService.createProgram("AABC123");
+        roleMappingService.addFormToProgram(p1.getName(), "form1");
+        roleMappingService.addFormToProgram(p1.getName(), "form2");
+
+        roleMappingService.associateRoleToForm(p1.getName(), "form2", "ADMIN", List.of("CREATE", "UPDATE"));
+
+        assertEquals(2, p1.getForms().size());
+        assertEquals(2, p1.getSecurityFunctions().size());
+
+        p1 = roleMappingService.removeFormFromProgram(p1.getName(), "form2");
+        assertEquals(1, p1.getForms().size());
+        assertEquals(2, p1.getSecurityFunctions().size());
+    }
+
+    @Test
+    @Transactional
+    void testSecurityFunctionRemoval() {
+        var p1 = roleMappingService.createProgram("AABC123");
+        roleMappingService.addFormToProgram(p1.getName(), "form1");
+        roleMappingService.addFormToProgram(p1.getName(), "form2");
+
+        roleMappingService.associateRoleToForm(p1.getName(), "form2", "ADMIN", List.of("CREATE", "UPDATE"));
+
+        assertEquals(2, p1.getForms().size());
+        assertEquals(2, p1.getSecurityFunctions().size());
+
+        p1 = roleMappingService.removeSecurityFunctionFromProgram(p1.getName(), "CREATE");
+        assertEquals(2, p1.getForms().size());
+        assertEquals(1, p1.getForms().stream().filter(p -> p.getName().equals("FORM2")).toList().get(0).getRoleFunctionFormMappings().size());
+        assertEquals(1, p1.getSecurityFunctions().size());
     }
 
     @Test
@@ -59,17 +92,13 @@ class MappApplicationTests {
         assertEquals(3, p.getRoleFunctionMappings().size());
 
         // add USER role with just READ
-        var u = roleMappingService.associateRoleToProgram("AABC123",
-                "USER",
-                List.of("READ"));
+        var u = roleMappingService.associateRoleToProgram("AABC123", "USER", List.of("READ"));
 
         // assert 4 mappings total
         assertEquals(4, u.getRoleFunctionMappings().size());
 
         // take away ADMIN's CREATE ability, check no orphans (orphans removed from previous ADMIN setting)
-        p = roleMappingService.associateRoleToProgram("AABC123",
-                "ADMIN",
-                List.of("READ", "UPDATE"));
+        p = roleMappingService.associateRoleToProgram("AABC123", "ADMIN", List.of("READ", "UPDATE"));
 
         // assert 3 mappings total now
         assertEquals(3, p.getRoleFunctionMappings().size());

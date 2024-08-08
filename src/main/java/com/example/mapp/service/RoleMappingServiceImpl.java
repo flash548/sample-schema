@@ -121,9 +121,23 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
+    public Program removeSecurityFunctionFromProgram(String programName, String functionName) {
+        Program p = getProgramByName(programName);
+        p.getSecurityFunctions().removeIf(f -> f.getName().equals(functionName.toUpperCase()));
+        return programRepository.save(p);
+    }
+
+    @Override
     public Program addFormToProgram(String programName, String formName) {
         Program p = this.getProgramByName(programName);
         p.getForms().add(Form.builder().name(formName).owner(p).build());
+        return programRepository.save(p);
+    }
+
+    @Override
+    public Program removeFormFromProgram(String programName, String formName) {
+        Program p = getProgramByName(programName);
+        p.getForms().removeIf(f -> f.getName().equals(formName.toUpperCase()));
         return programRepository.save(p);
     }
 

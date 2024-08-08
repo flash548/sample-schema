@@ -13,20 +13,22 @@ import java.util.List;
 
 public interface RoleMappingService {
 
-    // Role managements
+    // Role management
     Role createRoleName(String name);
     Role updateRoleName(Long existingRoleId, String name);
     List<Role> getRoles();
 
-    // Program managements
+    // Program management
     Program createProgram(String programName);
     List<Program> getPrograms();
     Program getProgramById(Long id);
     Program associateRoleToProgram(String programName, String roleName, List<String> functionNames);
     Program addSecurityFunctionsToProgram(String programName, List<String> functionNames);
+    Program removeSecurityFunctionFromProgram(String programName, String functionName);
 
     // Forms
     Program addFormToProgram(String programName, String formName);
+    Program removeFormFromProgram(String programName, String formName);
     Program associateRoleToForm(String programName, String formName, String roleName, List<String> functionNames);
 
     // DTO mappers
