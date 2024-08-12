@@ -34,7 +34,8 @@ public class RoleMappingServiceImpl implements RoleMappingService {
 
 
     private Program getProgramByName(String programName) {
-        return programRepository.findByName(programName).orElseThrow(() -> new NotFoundException("Pgm Name not found"));
+        return programRepository.findByName(programName.toUpperCase())
+                .orElseThrow(() -> new NotFoundException("Pgm Name not found"));
     }
 
     @Override
@@ -53,19 +54,21 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
+    public void deleteProgram(String programName) {
+        Program p = this.getProgramByName(programName);
+        programRepository.deleteById(p.getId());
+    }
+
+    @Override
     public Role createRoleName(String name) {
         return roleRepository.save(Role.builder().name(name.toUpperCase()).build());
     }
 
     @Override
-    public Role updateRoleName(Long existingRoleId, String name) {
-        Role r = roleRepository.findById(existingRoleId).orElseThrow(() -> new NotFoundException("Role id not found"));
-        if (!roleRepository.existsByNameIgnoreCase(name)) {
-            r.setName(name);
-            return roleRepository.save(r);
-        } else {
-            throw new ConflictException("That role already exists");
-        }
+    public void deleteRole(String name) {
+        Role r = roleRepository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new NotFoundException("Role not found"));
+        roleRepository.deleteById(r.getId());
     }
 
     @Override
@@ -140,6 +143,13 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
+    public Program removeRoleFromProgram(String programName, String roleName) {
+        Program p = getProgramByName(programName);
+        p.getRoleFunctionMappings().removeIf(rfm -> rfm.getRole().getName().equals(roleName.toUpperCase()));
+        return programRepository.save(p);
+    }
+
+    @Override
     public Program addFormToProgram(String programName, String formName) {
         Program p = this.getProgramByName(programName);
         p.getForms().add(Form.builder().name(formName).owner(p).build());
@@ -194,6 +204,14 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
+    public Program removeRoleFromProgramForm(String programName, String formName, String roleName) {
+        Program p = getProgramByName(programName);
+        Form f = p.getFormNamed(formName).orElseThrow(() -> new NotFoundException("Form not found"));
+        f.getRoleFunctionFormMappings().removeIf(rffm -> rffm.getRole().getName().equals(roleName.toUpperCase()));
+        return programRepository.save(p);
+    }
+
+    @Override
     public RoleWithProgramsDto mapRoleAndProgramsToDto(String roleName) {
         List<Program> allPrograms = programRepository.findAll();
         List<Program> returnList = new ArrayList<>();
@@ -203,8 +221,8 @@ public class RoleMappingServiceImpl implements RoleMappingService {
         for (Program p : allPrograms) {
             Set<Form> forms = p.getForms();
             Set<Form> filteredForms = new HashSet<>();
-            Set<RoleFunctionMapping> roleList = new HashSet<>(
-                    roleFunctionMappingRepository.findAllByProgramAndRole(p, r));
+            Set<RoleFunctionMapping> roleList = new HashSet<>(roleFunctionMappingRepository.findAllByProgramAndRole(p,
+                    r));
 
             for (Form f : forms) {
                 var result = roleFunctionFormMappingRepository.findAllByFormAndRoleAndProgram(f, r, p);
@@ -219,13 +237,12 @@ public class RoleMappingServiceImpl implements RoleMappingService {
             }
 
             // if this program has some association to given role, include it in the return
-            if (!filteredForms.isEmpty() || !roleList.isEmpty())
-                returnList.add(Program.builder()
-                        .id(p.getId())
-                        .name(p.getName())
-                        .forms(filteredForms)
-                        .roleFunctionMappings(roleList)
-                        .build());
+            if (!filteredForms.isEmpty() || !roleList.isEmpty()) returnList.add(Program.builder()
+                    .id(p.getId())
+                    .name(p.getName())
+                    .forms(filteredForms)
+                    .roleFunctionMappings(roleList)
+                    .build());
         }
 
 
@@ -244,6 +261,7 @@ public class RoleMappingServiceImpl implements RoleMappingService {
                 .name(program.getName())
                 .forms(program.getForms().stream().map(this::mapFormToDto).toList())
                 .roleMappings(groupedRoles)
+                .securityFunctions(program.getSecurityFunctions().stream().map(f -> f.getName()).toList())
                 .build();
     }
 
@@ -281,9 +299,7 @@ public class RoleMappingServiceImpl implements RoleMappingService {
     }
 
     @Override
-    public List<String> collateRolesToProgramAndForm(List<String> roleNames,
-                                                     String programName,
-                                                     String formName) {
+    public List<String> collateRolesToProgramAndForm(List<String> roleNames, String programName, String formName) {
 
         Set<SecurityFunction> funcs = new HashSet<>();
         Program p = this.getProgramByName(programName);
@@ -292,9 +308,11 @@ public class RoleMappingServiceImpl implements RoleMappingService {
                     .orElseThrow(() -> new NotFoundException("Role not found"));
             var programRoleFuncList = roleFunctionMappingRepository.findAllByProgramAndRole(p, r);
 
-
-            Form f = p.getFormNamed(formName).orElseThrow(() -> new NotFoundException("Form not found"));
-            var formList = roleFunctionFormMappingRepository.findAllByFormAndRoleAndProgram(f, r, p);
+            List<RoleFunctionFormMapping> formList = new ArrayList<>();
+            if (formName != null) {
+                Form f = p.getFormNamed(formName).orElseThrow(() -> new NotFoundException("Form not found"));
+                formList.addAll(roleFunctionFormMappingRepository.findAllByFormAndRoleAndProgram(f, r, p));
+            }
 
             // if the form level list of security functions is present for given role
             // then prefer that OVER the program level one

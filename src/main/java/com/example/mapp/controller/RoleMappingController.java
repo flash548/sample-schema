@@ -65,7 +65,8 @@ public class RoleMappingController {
                 HttpStatus.OK);
     }
 
-    @Operation(summary = "Gets a list of strings representing the security functions for a program")
+    @Operation(summary = "Gets a list of strings representing the security functions for a program",
+            description = "Gets a list of collated permissions for a given program (and form if given).  Request body is a list of 0 or more roles for which to collate")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = SecurityFunctionList.class)))})
     @PostMapping("/permissions-for-program")
     public ResponseEntity<SecurityFunctionList> getSecurityFunctionsForResource(@RequestParam String programName,
@@ -78,9 +79,7 @@ public class RoleMappingController {
     }
 
     @Operation(summary = "Add a new program")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ProgramDto.class))),
-            @ApiResponse(responseCode = "409", description = "Program already exists", content = @Content(schema = @Schema(implementation = ProgramDto.class)))})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ProgramDto.class))), @ApiResponse(responseCode = "409", description = "Program already exists", content = @Content(schema = @Schema(implementation = ProgramDto.class)))})
     @PostMapping("/add-program")
     public ResponseEntity<ProgramDto> postProgram(@RequestParam String programName) {
         return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.createProgram(programName)),
@@ -93,6 +92,25 @@ public class RoleMappingController {
     public ResponseEntity<ProgramDto> postForm(@RequestParam String programName, @RequestParam String formName) {
         return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.addFormToProgram(programName,
                 formName)), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Removes a form underneath an existing program")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ProgramDto.class)))})
+    @PostMapping("/remove-form")
+    public ResponseEntity<ProgramDto> removeForm(@RequestParam String programName, @RequestParam String formName) {
+        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.removeFormFromProgram(
+                programName,
+                formName)), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Removes a security function underneath an existing program", description = "Removes the security function as well from all usages within program")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ProgramDto.class)))})
+    @PostMapping("/remove-security-function")
+    public ResponseEntity<ProgramDto> removeSecurityFunction(@RequestParam String programName,
+                                                             @RequestParam String securityFunctionName) {
+        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.removeSecurityFunctionFromProgram(
+                programName,
+                securityFunctionName)), HttpStatus.OK);
     }
 
 
@@ -139,4 +157,41 @@ public class RoleMappingController {
                 securityFunctions)), HttpStatus.OK);
     }
 
+    @Operation(summary = "Removes a role from an existing program")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ProgramDto.class)))})
+    @PostMapping(value = "/remove-role-from-program")
+    public ResponseEntity<ProgramDto> removeRoleFromProgram(@RequestParam String programName,
+                                                            @RequestParam String roleName) {
+        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.removeRoleFromProgram(
+                programName,
+                roleName)), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Removes a role from an existing form within an existing program")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ProgramDto.class)))})
+    @PostMapping(value = "/remove-role-from-form")
+    public ResponseEntity<ProgramDto> removeRoleFromProgramForm(@RequestParam String programName,
+                                                                @RequestParam String formName,
+                                                                @RequestParam String roleName) {
+        return new ResponseEntity<>(roleMappingService.mapProgramToDto(roleMappingService.removeRoleFromProgramForm(
+                programName,
+                formName,
+                roleName)), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Hard deletes a program (and all its forms/security functions)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204")})
+    @DeleteMapping("/delete-program")
+    public ResponseEntity<Void> deleteProgram(@RequestParam String programName) {
+        roleMappingService.deleteProgram(programName);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Operation(summary = "Hard deletes a role (and all its forms/security associations of which)")
+    @ApiResponses(value = {@ApiResponse(responseCode = "204")})
+    @DeleteMapping("/delete-role")
+    public ResponseEntity<Void> deleteRole(@RequestParam String roleName) {
+        roleMappingService.deleteRole(roleName);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

@@ -18,4 +18,5 @@ public class ProgramDto {
     String name;
     List<FormDto> forms;
     Map<String, List<String>> roleMappings;
+    List<String> securityFunctions;
 }

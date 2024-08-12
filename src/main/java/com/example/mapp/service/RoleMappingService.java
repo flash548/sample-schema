@@ -15,21 +15,24 @@ public interface RoleMappingService {
 
     // Role management
     Role createRoleName(String name);
-    Role updateRoleName(Long existingRoleId, String name);
+    void deleteRole(String name);
     List<Role> getRoles();
 
     // Program management
     Program createProgram(String programName);
     List<Program> getPrograms();
+    void deleteProgram(String programName);
     Program getProgramById(Long id);
     Program associateRoleToProgram(String programName, String roleName, List<String> functionNames);
     Program addSecurityFunctionsToProgram(String programName, List<String> functionNames);
     Program removeSecurityFunctionFromProgram(String programName, String functionName);
+    Program removeRoleFromProgram(String programName, String roleName);
 
     // Forms
     Program addFormToProgram(String programName, String formName);
     Program removeFormFromProgram(String programName, String formName);
     Program associateRoleToForm(String programName, String formName, String roleName, List<String> functionNames);
+    Program removeRoleFromProgramForm(String programName, String formName, String roleName);
 
     // DTO mappers
     RoleWithProgramsDto mapRoleAndProgramsToDto(String roleName);
