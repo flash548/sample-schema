@@ -103,23 +103,7 @@ A sample output from the `/roleDetails` endpoint for all persisted roles... show
 
 ## API
 
-The REST controller offers easy management of said schema.
-
-- `/roleNames` => Lists rolenames persisted
-- `/roleDetails[?roleName=]` => If no rolename given, lists each role and its security functions in each declared
-  program/form - otherwise returns just specified roleName
-- `/programs` => Lists all programs persisted and their owned forms -- all with any associated roles and security
-  functions
-- `/programs/{id}` => Same but just for a given roleId
-- `/add-program?programName=` => adds a new program with given name
-- `/add-form?programName=&formName=` => adds a new form to a given programName
-- `/roles/add-role?roleName=` => adds a new un-associated role to the database
-- `/map-role-to-form?programName=&formName=&roleName=` => maps a given roleName to a program's form (request body needs
-  to be a JSON string array of security function names). Call is idempotent in that form names and security function
-  names will be created as needed
-- `/map-role-to-program?programName=&roleName=` => maps a given roleName to a program.  (request body needs
-  to be a JSON string array of security function names). Call is idempotent in that security function
-  names will be created as needed
+The REST controller offers easy management of said schema.  The swagger doc is available at `/swagger-ui.html`
 
 ## Database / Sources
 
